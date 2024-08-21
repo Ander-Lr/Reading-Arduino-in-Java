@@ -8,14 +8,21 @@ import jssc.SerialPort;
 import jssc.SerialPortEvent;
 import jssc.SerialPortEventListener;
 import jssc.SerialPortList;
+import view.PetFrame;
 
 /**
  *
  * @author Usuario
  */
 public class ReadSensor {
-    
-    public void ConectionArduino(){
+
+    private PetFrame petFrame;
+
+    public ReadSensor(PetFrame petFrame) {
+        this.petFrame = petFrame;
+    }
+
+    public void ConectionArduino() {
         String puertos[] = SerialPortList.getPortNames();
         for (String n : puertos) {
             System.out.println(n);
@@ -24,11 +31,11 @@ public class ReadSensor {
         try {
             sp.openPort();
             sp.setParams(SerialPort.BAUDRATE_115200, SerialPort.DATABITS_8, SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
+
+            LecturaSerial lecturaSerial = new LecturaSerial(sp, petFrame);
+            sp.addEventListener(lecturaSerial, SerialPort.MASK_RXCHAR);
             
-            LecturaSerial lecturaSerial = new LecturaSerial(sp);
-            sp.addEventListener(lecturaSerial, SerialPort.MASK_RXCHAR);  
-            
-            Thread.sleep(1500);            
+            Thread.sleep(1500);
             // Aquí se omite el bucle de envío porque no estamos enviando datos desde Java,
             // solo estamos recibiendo datos enviados por el Arduino.
         } catch (Exception e) {
@@ -38,11 +45,15 @@ public class ReadSensor {
 }
 
 class LecturaSerial implements SerialPortEventListener {
-    Object object=new Object();//Retornar para Utilizar la variable
-    SerialPort sp;
-    public LecturaSerial(SerialPort sp) {
+
+    private SerialPort sp;
+    private PetFrame petFrame;
+
+    public LecturaSerial(SerialPort sp, PetFrame petFrame) {
         this.sp = sp;
+        this.petFrame = petFrame;
     }
+
     @Override
     public void serialEvent(SerialPortEvent spe) {
         if (spe.isRXCHAR() && spe.getEventValue() > 0) {
@@ -51,8 +62,8 @@ class LecturaSerial implements SerialPortEventListener {
                 if (msg != null && !msg.trim().isEmpty()) {
                     System.out.println("Recibiendo...");
                     System.out.println("Distancia medida: " + msg.trim() + " cm");
-                    object=msg.trim();//guarda la variable                   
                     
+                    petFrame.updateStatus(msg.trim()); // Actualizar la UI
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -60,7 +71,4 @@ class LecturaSerial implements SerialPortEventListener {
         }
     }
 
-    public Object getObject() {
-        return object;//Se utilizará los datos
-    }
 }
