@@ -24,7 +24,10 @@ public class ReadSensor {
         try {
             sp.openPort();
             sp.setParams(SerialPort.BAUDRATE_115200, SerialPort.DATABITS_8, SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
-            sp.addEventListener(new LecturaSerial(sp), SerialPort.MASK_RXCHAR);            
+            
+            LecturaSerial lecturaSerial = new LecturaSerial(sp);
+            sp.addEventListener(lecturaSerial, SerialPort.MASK_RXCHAR);  
+            
             Thread.sleep(1500);            
             // Aquí se omite el bucle de envío porque no estamos enviando datos desde Java,
             // solo estamos recibiendo datos enviados por el Arduino.
